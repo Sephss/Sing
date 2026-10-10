@@ -15,9 +15,9 @@ export const DEFAULT_SETTINGS = {
 
 const DEFAULT_MIC_PREFS = {
   deviceId: "",
-  echoCancellation: false, // browser voice processing makes music sound like a phone call
+  echoCancellation: true, // needed when singing through speakers; turn off when using headphones
   inputGain: 100,
-  outputGain: 100,
+  outputGain: 60,
   effectParams: {},
 };
 

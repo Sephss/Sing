@@ -16,6 +16,7 @@ let status = {
   warn: false,
 };
 let bluetoothInput = false;
+let guardTimer = null;
 let skippedBluetooth = ""; // label of a Bluetooth mic we deliberately avoided
 // Bluetooth headsets drop to low-quality "hands-free" (phone call) audio the moment their mic is used.
 const BLUETOOTH_LABEL = /bluetooth|airpods|buds|hands-?free|\bhfp\b|\bBT\b/i;
@@ -130,6 +131,28 @@ function connectEffect(effect) {
   }
 }
 
+/** Howling feedback is a sustained, very loud signal. If it persists, mute the speaker output immediately. */
+function startFeedbackGuard(analyser, monitorGain) {
+  clearInterval(guardTimer);
+  const samples = new Float32Array(analyser.fftSize);
+  let loudTicks = 0;
+  guardTimer = setInterval(() => {
+    analyser.getFloatTimeDomainData(samples);
+    let sum = 0;
+    for (let i = 0; i < samples.length; i += 1) sum += samples[i] * samples[i];
+    loudTicks = Math.sqrt(sum / samples.length) > 0.45 ? loudTicks + 1 : 0;
+    if (loudTicks >= 5 && ctx) {
+      loudTicks = 0;
+      monitorGain.gain.setTargetAtTime(0, ctx.currentTime, 0.01);
+      setStatus(
+        "on",
+        "Feedback detected, so your voice was muted to protect your ears. Turn Echo cancellation on, lower Output volume, then turn the mic off and on.",
+        true,
+      );
+    }
+  }, 100);
+}
+
 function buildGraph() {
   const prefs = storage.getMicPrefs();
   ctx = new (window.AudioContext || window.webkitAudioContext)({
@@ -169,6 +192,7 @@ function buildGraph() {
     analyser,
   };
   connectEffect(getEffect(effectId));
+  startFeedbackGuard(analyser, monitorGain);
 }
 
 export const mic = {
@@ -264,6 +288,8 @@ export const mic = {
   },
 
   stop(announce = true) {
+    clearInterval(guardTimer);
+    guardTimer = null;
     bluetoothInput = false;
     skippedBluetooth = "";
     try {
