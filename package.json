@@ -1,0 +1,7 @@
+{
+  "name": "sing-karaoke",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Premium web karaoke"
+}
