@@ -16,10 +16,53 @@ let status = {
   warn: false,
 };
 let bluetoothInput = false;
+let skippedBluetooth = ""; // label of a Bluetooth mic we deliberately avoided
 // Bluetooth headsets drop to low-quality "hands-free" (phone call) audio the moment their mic is used.
 const BLUETOOTH_LABEL = /bluetooth|airpods|buds|hands-?free|\bhfp\b|\bBT\b/i;
 
+async function openStream(deviceId, echoCancellation) {
+  return navigator.mediaDevices.getUserMedia({
+    audio: {
+      deviceId: deviceId ? { exact: deviceId } : undefined,
+      // Voice-call processing (echo cancellation) ducks and band-limits everything, so it's off by default.
+      echoCancellation: echoCancellation === true,
+      noiseSuppression: false,
+      autoGainControl: false,
+    },
+  });
+}
+
+async function listInputs() {
+  const all = await navigator.mediaDevices.enumerateDevices();
+  return all.filter((d) => d.kind === "audioinput");
+}
+
+/** First real (non-Bluetooth) microphone, e.g. the laptop's built-in mic. Needs labels, i.e. prior permission. */
+async function builtInInputId() {
+  const inputs = await listInputs();
+  const real = inputs.filter(
+    (d) =>
+      d.label && d.deviceId !== "default" && d.deviceId !== "communications",
+  );
+  return real.find((d) => !BLUETOOTH_LABEL.test(d.label))?.deviceId || "";
+}
+
+/** If the system default input is a Bluetooth headset, return another mic's id so the headset stays in music mode. */
+async function avoidBluetoothDefault() {
+  const inputs = await listInputs();
+  const fallback = inputs.find((d) => d.deviceId === "default") || inputs[0];
+  if (!fallback || !BLUETOOTH_LABEL.test(fallback.label || "")) return "";
+  return builtInInputId();
+}
+
 function readyStatus() {
+  if (skippedBluetooth) {
+    return [
+      "on",
+      `Microphone on. Your Bluetooth headset’s mic (${skippedBluetooth}) was skipped so music keeps full quality.`,
+      false,
+    ];
+  }
   if (bluetoothInput) {
     return [
       "on",
@@ -182,17 +225,29 @@ export const mic = {
     if (stream) return true;
     setStatus("requesting", "Waiting for microphone permission…");
     try {
-      const { deviceId, echoCancellation } = storage.getMicPrefs();
-      stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          deviceId: deviceId ? { exact: deviceId } : undefined,
-          // Voice-call processing (echo cancellation) ducks and band-limits everything, so it's off by default.
-          echoCancellation: echoCancellation === true,
-          latency: { ideal: 0 },
-          noiseSuppression: false,
-          autoGainControl: false,
-        },
-      });
+      const { deviceId: saved, echoCancellation } = storage.getMicPrefs();
+      skippedBluetooth = "";
+      let deviceId = saved;
+      if (!saved) {
+        try {
+          deviceId = await avoidBluetoothDefault();
+        } catch {
+          deviceId = "";
+        }
+      }
+      stream = await openStream(deviceId, echoCancellation);
+
+      // First run: labels were hidden until permission was granted, so re-check now and switch away from Bluetooth.
+      let label = stream.getAudioTracks()[0]?.label || "";
+      if (!saved && BLUETOOTH_LABEL.test(label)) {
+        const alternative = await builtInInputId().catch(() => "");
+        if (alternative) {
+          stream.getTracks().forEach((track) => track.stop());
+          stream = await openStream(alternative, echoCancellation);
+          skippedBluetooth = label;
+          label = stream.getAudioTracks()[0]?.label || "";
+        }
+      }
       buildGraph();
       if (ctx.state === "suspended") await ctx.resume();
       stream.getAudioTracks()[0]?.addEventListener("ended", () => this.stop());
@@ -210,7 +265,16 @@ export const mic = {
 
   stop(announce = true) {
     bluetoothInput = false;
-    stream?.getTracks().forEach((track) => track.stop());
+    skippedBluetooth = "";
+    try {
+      nodes?.source.disconnect();
+    } catch {
+      /* already disconnected */
+    }
+    stream?.getTracks().forEach((track) => {
+      track.enabled = false;
+      track.stop();
+    });
     stream = null;
     activeEffect?.dispose();
     activeEffect = null;

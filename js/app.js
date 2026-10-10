@@ -866,6 +866,7 @@ function renderRecentIfVisible() {
 
 window.addEventListener("pagehide", () => {
   stopHero?.();
-});
+  mic.stop(false);
+}); // always release the mic
 
 init();
