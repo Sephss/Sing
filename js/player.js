@@ -1,7 +1,7 @@
 // Thin wrapper around the official YouTube IFrame Player API.
 // Video/audio stays inside YouTube's player (no downloading, no CORS tricks).
-const API_SRC = 'https://www.youtube.com/iframe_api';
-const POLL_MS = 200;
+const API_SRC = "https://www.youtube.com/iframe_api";
+const POLL_MS = 100;
 
 let apiPromise = null;
 function loadIframeApi() {
@@ -13,21 +13,38 @@ function loadIframeApi() {
       previous?.();
       resolve(window.YT);
     };
-    const script = document.createElement('script');
+    const script = document.createElement("script");
     script.src = API_SRC;
     script.async = true;
-    script.onerror = () => { apiPromise = null; reject(new Error('Could not load the YouTube player.')); };
+    script.onerror = () => {
+      apiPromise = null;
+      reject(new Error("Could not load the YouTube player."));
+    };
     document.head.appendChild(script);
   });
   return apiPromise;
 }
 
-export const PlayerState = { ENDED: 0, PLAYING: 1, PAUSED: 2, BUFFERING: 3, CUED: 5 };
+export const PlayerState = {
+  ENDED: 0,
+  PLAYING: 1,
+  PAUSED: 2,
+  BUFFERING: 3,
+  CUED: 5,
+};
 
 // Error codes 2, 5, 100, 101, 150 all mean "this video can't be played here".
 const UNPLAYABLE = new Set([2, 5, 100, 101, 150]);
 
-export function createPlayer({ elementId, volume = 80, onState, onTime, onEnded, onUnplayable, onFailure }) {
+export function createPlayer({
+  elementId,
+  volume = 80,
+  onState,
+  onTime,
+  onEnded,
+  onUnplayable,
+  onFailure,
+}) {
   let yt = null;
   let ready = false;
   let pending = null;
@@ -50,8 +67,8 @@ export function createPlayer({ elementId, volume = 80, onState, onTime, onEnded,
     try {
       const YT = await loadIframeApi();
       yt = new YT.Player(elementId, {
-        width: '100%',
-        height: '100%',
+        width: "100%",
+        height: "100%",
         playerVars: {
           controls: 0,
           disablekb: 1,
@@ -60,7 +77,7 @@ export function createPlayer({ elementId, volume = 80, onState, onTime, onEnded,
           iv_load_policy: 3,
           playsinline: 1,
           fs: 0,
-          origin: window.location.origin
+          origin: window.location.origin,
         },
         events: {
           onReady: () => {
@@ -76,15 +93,17 @@ export function createPlayer({ elementId, volume = 80, onState, onTime, onEnded,
             lastState = event.data;
             onState?.(event.data);
             if (event.data === PlayerState.PLAYING) startPolling();
-            else if (event.data === PlayerState.ENDED) { stopPolling(); onEnded?.(); }
-            else if (event.data !== PlayerState.BUFFERING) stopPolling();
+            else if (event.data === PlayerState.ENDED) {
+              stopPolling();
+              onEnded?.();
+            } else if (event.data !== PlayerState.BUFFERING) stopPolling();
           },
           onError: (event) => {
             stopPolling();
             if (UNPLAYABLE.has(event.data)) onUnplayable?.(event.data);
             else onFailure?.(event.data);
-          }
-        }
+          },
+        },
       });
     } catch (error) {
       onFailure?.(error);
@@ -104,29 +123,58 @@ export function createPlayer({ elementId, volume = 80, onState, onTime, onEnded,
 
   return {
     load,
-    play() { if (ready) yt.playVideo(); },
-    pause() { if (ready) yt.pauseVideo(); },
+    play() {
+      if (ready) yt.playVideo();
+    },
+    pause() {
+      if (ready) yt.pauseVideo();
+    },
     toggle() {
       if (!ready) return;
-      if (lastState === PlayerState.PLAYING) yt.pauseVideo(); else yt.playVideo();
+      if (lastState === PlayerState.PLAYING) yt.pauseVideo();
+      else yt.playVideo();
     },
-    stop() { if (ready) yt.stopVideo(); },
-    seekTo(seconds) { if (ready) yt.seekTo(seconds, true); },
-    seekBy(delta) { if (ready) yt.seekTo(Math.max(0, (yt.getCurrentTime() || 0) + delta), true); },
-    setVolume(value) { volume = value; if (ready) yt.setVolume(value); },
-    getVolume() { return ready ? yt.getVolume() : volume; },
-    mute() { if (ready) yt.mute(); },
-    unmute() { if (ready) yt.unMute(); },
-    isMuted() { return ready ? yt.isMuted() : false; },
-    get isPlaying() { return lastState === PlayerState.PLAYING; },
-    getTime() { return ready ? yt.getCurrentTime() || 0 : 0; },
-    getDuration() { return ready ? yt.getDuration() || 0 : 0; },
+    stop() {
+      if (ready) yt.stopVideo();
+    },
+    seekTo(seconds) {
+      if (ready) yt.seekTo(seconds, true);
+    },
+    seekBy(delta) {
+      if (ready)
+        yt.seekTo(Math.max(0, (yt.getCurrentTime() || 0) + delta), true);
+    },
+    setVolume(value) {
+      volume = value;
+      if (ready) yt.setVolume(value);
+    },
+    getVolume() {
+      return ready ? yt.getVolume() : volume;
+    },
+    mute() {
+      if (ready) yt.mute();
+    },
+    unmute() {
+      if (ready) yt.unMute();
+    },
+    isMuted() {
+      return ready ? yt.isMuted() : false;
+    },
+    get isPlaying() {
+      return lastState === PlayerState.PLAYING;
+    },
+    getTime() {
+      return ready ? yt.getCurrentTime() || 0 : 0;
+    },
+    getDuration() {
+      return ready ? yt.getDuration() || 0 : 0;
+    },
     destroy() {
       stopPolling();
       yt?.destroy?.();
       yt = null;
       ready = false;
-    }
+    },
   };
 }
 
@@ -134,6 +182,6 @@ export function formatTime(totalSeconds) {
   const seconds = Math.max(0, Math.floor(totalSeconds || 0));
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
-  const s = String(seconds % 60).padStart(2, '0');
-  return h ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`;
+  const s = String(seconds % 60).padStart(2, "0");
+  return h ? `${h}:${String(m).padStart(2, "0")}:${s}` : `${m}:${s}`;
 }

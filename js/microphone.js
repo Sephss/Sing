@@ -1,39 +1,63 @@
 // Microphone engine: getUserMedia → gain → hi-pass → effect → compressor → output → speakers.
-import { EFFECTS, getEffect, defaultParams } from './effects.js';
-import { storage } from './storage.js';
+import { EFFECTS, getEffect, defaultParams } from "./effects.js";
+import { storage } from "./storage.js";
 
 const listeners = new Set();
 let ctx = null;
 let stream = null;
 let nodes = null;
 let activeEffect = null;
-let effectId = 'clean';
+let effectId = "clean";
 let params = {};
 let monitoring = true;
-let status = { state: 'idle', message: 'Allow microphone access to use Karaoke Microphone.' };
+let status = {
+  state: "idle",
+  message: "Allow microphone access to use Karaoke Microphone.",
+  warn: false,
+};
+let bluetoothInput = false;
+// Bluetooth headsets drop to low-quality "hands-free" (phone call) audio the moment their mic is used.
+const BLUETOOTH_LABEL = /bluetooth|airpods|buds|hands-?free|\bhfp\b|\bBT\b/i;
 
-function setStatus(state, message) {
-  status = { state, message };
+function readyStatus() {
+  if (bluetoothInput) {
+    return [
+      "on",
+      "Bluetooth mic detected. Bluetooth headphones switch to phone-call quality while their mic is in use. Choose your computer’s built-in mic under Input device and keep Bluetooth for listening only.",
+      true,
+    ];
+  }
+  return [
+    "on",
+    monitoring
+      ? "Microphone on — you should hear yourself. Headphones recommended."
+      : "Microphone on — monitoring is off.",
+    false,
+  ];
+}
+
+function setStatus(state, message, warn = false) {
+  status = { state, message, warn };
   listeners.forEach((fn) => fn(status));
 }
 
 function describeError(error) {
   switch (error?.name) {
-    case 'NotAllowedError':
-    case 'PermissionDeniedError':
-      return 'Microphone access was blocked. Allow it in your browser’s site settings, then try again.';
-    case 'NotFoundError':
-    case 'DevicesNotFoundError':
-      return 'No microphone was detected. Plug one in and try again.';
-    case 'NotReadableError':
-    case 'TrackStartError':
-      return 'Your microphone is unavailable — another app may be using it.';
-    case 'OverconstrainedError':
-      return 'The selected microphone isn’t available. Choose another input device.';
-    case 'SecurityError':
-      return 'Microphone access needs a secure (HTTPS) connection.';
+    case "NotAllowedError":
+    case "PermissionDeniedError":
+      return "Microphone access was blocked. Allow it in your browser’s site settings, then try again.";
+    case "NotFoundError":
+    case "DevicesNotFoundError":
+      return "No microphone was detected. Plug one in and try again.";
+    case "NotReadableError":
+    case "TrackStartError":
+      return "Your microphone is unavailable — another app may be using it.";
+    case "OverconstrainedError":
+      return "The selected microphone isn’t available. Choose another input device.";
+    case "SecurityError":
+      return "Microphone access needs a secure (HTTPS) connection.";
     default:
-      return 'Something went wrong starting the microphone.';
+      return "Something went wrong starting the microphone.";
   }
 }
 
@@ -53,7 +77,11 @@ function connectEffect(effect) {
   activeEffect = built;
   if (previous) {
     setTimeout(() => {
-      try { previous.output.disconnect(); } catch { /* already disconnected */ }
+      try {
+        previous.output.disconnect();
+      } catch {
+        /* already disconnected */
+      }
       previous.dispose();
     }, 80);
   }
@@ -61,12 +89,14 @@ function connectEffect(effect) {
 
 function buildGraph() {
   const prefs = storage.getMicPrefs();
-  ctx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'interactive' });
+  ctx = new (window.AudioContext || window.webkitAudioContext)({
+    latencyHint: "interactive",
+  });
   const source = ctx.createMediaStreamSource(stream);
   const inputGain = ctx.createGain();
   inputGain.gain.value = prefs.inputGain / 100;
   const pre = ctx.createBiquadFilter(); // rumble filter
-  pre.type = 'highpass';
+  pre.type = "highpass";
   pre.frequency.value = 80;
   const compressor = ctx.createDynamicsCompressor();
   compressor.threshold.value = -24;
@@ -86,20 +116,43 @@ function buildGraph() {
   compressor.connect(outputGain).connect(monitorGain).connect(ctx.destination);
   compressor.connect(analyser); // visualizer taps before monitor so it works with monitoring off
 
-  nodes = { source, inputGain, pre, compressor, outputGain, monitorGain, analyser };
+  nodes = {
+    source,
+    inputGain,
+    pre,
+    compressor,
+    outputGain,
+    monitorGain,
+    analyser,
+  };
   connectEffect(getEffect(effectId));
 }
 
 export const mic = {
   get supported() {
-    return Boolean(navigator.mediaDevices?.getUserMedia && (window.AudioContext || window.webkitAudioContext));
+    return Boolean(
+      navigator.mediaDevices?.getUserMedia &&
+      (window.AudioContext || window.webkitAudioContext),
+    );
   },
-  get active() { return Boolean(stream); },
-  get status() { return status; },
-  get analyser() { return nodes?.analyser || null; },
-  get effectId() { return effectId; },
-  get params() { return params; },
-  get monitoring() { return monitoring; },
+  get active() {
+    return Boolean(stream);
+  },
+  get status() {
+    return status;
+  },
+  get analyser() {
+    return nodes?.analyser || null;
+  },
+  get effectId() {
+    return effectId;
+  },
+  get params() {
+    return params;
+  },
+  get monitoring() {
+    return monitoring;
+  },
 
   onStatus(fn) {
     listeners.add(fn);
@@ -111,56 +164,80 @@ export const mic = {
     monitoring = settings.micMonitor;
     effectId = getEffect(settings.micEffect).id;
     params = paramsFor(getEffect(effectId));
-    if (!this.supported) setStatus('unsupported', 'This browser doesn’t support the microphone features needed here. Try a recent Chrome, Edge, Firefox or Safari.');
+    if (!this.supported)
+      setStatus(
+        "unsupported",
+        "This browser doesn’t support the microphone features needed here. Try a recent Chrome, Edge, Firefox or Safari.",
+      );
   },
 
   async start() {
     if (!this.supported) {
-      setStatus('unsupported', 'This browser doesn’t support the microphone features needed here. Try a recent Chrome, Edge, Firefox or Safari.');
+      setStatus(
+        "unsupported",
+        "This browser doesn’t support the microphone features needed here. Try a recent Chrome, Edge, Firefox or Safari.",
+      );
       return false;
     }
     if (stream) return true;
-    setStatus('requesting', 'Waiting for microphone permission…');
+    setStatus("requesting", "Waiting for microphone permission…");
     try {
-      const deviceId = storage.getMicPrefs().deviceId;
+      const { deviceId, echoCancellation } = storage.getMicPrefs();
       stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           deviceId: deviceId ? { exact: deviceId } : undefined,
-          echoCancellation: true,
+          // Voice-call processing (echo cancellation) ducks and band-limits everything, so it's off by default.
+          echoCancellation: echoCancellation === true,
+          latency: { ideal: 0 },
           noiseSuppression: false,
-          autoGainControl: false
-        }
+          autoGainControl: false,
+        },
       });
       buildGraph();
-      if (ctx.state === 'suspended') await ctx.resume();
-      stream.getAudioTracks()[0]?.addEventListener('ended', () => this.stop());
-      setStatus('on', monitoring ? 'Microphone on — you should hear yourself. Headphones recommended.' : 'Microphone on — monitoring is off.');
+      if (ctx.state === "suspended") await ctx.resume();
+      stream.getAudioTracks()[0]?.addEventListener("ended", () => this.stop());
+      bluetoothInput = BLUETOOTH_LABEL.test(
+        stream.getAudioTracks()[0]?.label || "",
+      );
+      setStatus(...readyStatus());
       return true;
     } catch (error) {
       this.stop(false);
-      setStatus('error', describeError(error));
+      setStatus("error", describeError(error));
       return false;
     }
   },
 
   stop(announce = true) {
+    bluetoothInput = false;
     stream?.getTracks().forEach((track) => track.stop());
     stream = null;
     activeEffect?.dispose();
     activeEffect = null;
     nodes = null;
-    if (ctx) { ctx.close().catch(() => {}); ctx = null; }
-    if (announce) setStatus('idle', 'Microphone off. Turn it on to sing with effects.');
+    if (ctx) {
+      ctx.close().catch(() => {});
+      ctx = null;
+    }
+    if (announce)
+      setStatus("idle", "Microphone off. Turn it on to sing with effects.");
   },
 
   async listDevices() {
     if (!navigator.mediaDevices?.enumerateDevices) return [];
     const devices = await navigator.mediaDevices.enumerateDevices();
-    return devices.filter((d) => d.kind === 'audioinput');
+    return devices.filter((d) => d.kind === "audioinput");
   },
 
   async setDevice(deviceId) {
     storage.saveMicPrefs({ deviceId });
+    if (!stream) return;
+    this.stop(false);
+    await this.start();
+  },
+
+  async setEchoCancellation(on) {
+    storage.saveMicPrefs({ echoCancellation: on });
     if (!stream) return;
     this.stop(false);
     await this.start();
@@ -198,14 +275,18 @@ export const mic = {
 
   setOutputGain(percent) {
     storage.saveMicPrefs({ outputGain: percent });
-    nodes?.outputGain.gain.setTargetAtTime(percent / 100, ctx.currentTime, 0.02);
+    nodes?.outputGain.gain.setTargetAtTime(
+      percent / 100,
+      ctx.currentTime,
+      0.02,
+    );
   },
 
   setMonitoring(on) {
     monitoring = on;
     storage.saveSettings({ micMonitor: on });
     nodes?.monitorGain.gain.setTargetAtTime(on ? 1 : 0, ctx.currentTime, 0.02);
-    if (stream) setStatus('on', on ? 'Microphone on — you should hear yourself. Headphones recommended.' : 'Microphone on — monitoring is off.');
+    if (stream) setStatus(...readyStatus());
   },
 
   /** 3-second loopback so people can hear their effect; restores previous state afterwards. */
@@ -216,21 +297,26 @@ export const mic = {
     nodes?.monitorGain.gain.setTargetAtTime(1, ctx.currentTime, 0.02);
     await new Promise((resolve) => setTimeout(resolve, durationMs));
     if (!wasActive) this.stop();
-    else nodes?.monitorGain.gain.setTargetAtTime(wasMonitoring ? 1 : 0, ctx.currentTime, 0.02);
+    else
+      nodes?.monitorGain.gain.setTargetAtTime(
+        wasMonitoring ? 1 : 0,
+        ctx.currentTime,
+        0.02,
+      );
     return true;
-  }
+  },
 };
 
 export { EFFECTS };
 
 /** Draws mirrored frequency bars + a waveform. Returns a stop() function. */
 export function startVisualizer(canvas, { getAnalyser, isIdle }) {
-  const g = canvas.getContext('2d');
+  const g = canvas.getContext("2d");
   let raf = 0;
   let frame = 0;
   let freq = null;
   let wave = null;
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function resize() {
     const ratio = Math.min(window.devicePixelRatio || 1, 2);
@@ -250,8 +336,8 @@ export function startVisualizer(canvas, { getAnalyser, isIdle }) {
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
     const style = getComputedStyle(canvas);
-    const accent = style.getPropertyValue('--accent').trim() || '#ff2d78';
-    const accent2 = style.getPropertyValue('--accent-2').trim() || '#7c5cff';
+    const accent = style.getPropertyValue("--accent").trim() || "#ff2d78";
+    const accent2 = style.getPropertyValue("--accent-2").trim() || "#7c5cff";
     g.clearRect(0, 0, w, h);
     frame += 1;
 
@@ -264,8 +350,14 @@ export function startVisualizer(canvas, { getAnalyser, isIdle }) {
     gradient.addColorStop(1, accent2);
 
     if (analyser) {
-      freq = freq?.length === analyser.frequencyBinCount ? freq : new Uint8Array(analyser.frequencyBinCount);
-      wave = wave?.length === analyser.fftSize ? wave : new Uint8Array(analyser.fftSize);
+      freq =
+        freq?.length === analyser.frequencyBinCount
+          ? freq
+          : new Uint8Array(analyser.frequencyBinCount);
+      wave =
+        wave?.length === analyser.fftSize
+          ? wave
+          : new Uint8Array(analyser.fftSize);
       analyser.getByteFrequencyData(freq);
       analyser.getByteTimeDomainData(wave);
     }
@@ -297,7 +389,8 @@ export function startVisualizer(canvas, { getAnalyser, isIdle }) {
       const step = w / wave.length;
       for (let i = 0; i < wave.length; i += 1) {
         const y = (wave[i] / 255) * h;
-        if (i === 0) g.moveTo(0, y); else g.lineTo(i * step, y);
+        if (i === 0) g.moveTo(0, y);
+        else g.lineTo(i * step, y);
       }
       g.stroke();
       g.shadowBlur = 0;

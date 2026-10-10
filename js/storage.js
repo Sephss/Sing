@@ -1,5 +1,5 @@
 // Single gateway for all localStorage access.
-const PREFIX = 'sing:';
+const PREFIX = "sing:";
 
 export const DEFAULT_SETTINGS = {
   autoplay: true,
@@ -7,17 +7,18 @@ export const DEFAULT_SETTINGS = {
   volume: 80,
   showVisualizer: true,
   lyricsFontScale: 1,
-  repeat: 'off', // off | all | one
+  repeat: "off", // off | all | one
   micMonitor: true,
-  micEffect: 'clean',
-  micIntensity: 50
+  micEffect: "clean",
+  micIntensity: 50,
 };
 
 const DEFAULT_MIC_PREFS = {
-  deviceId: '',
+  deviceId: "",
+  echoCancellation: false, // browser voice processing makes music sound like a phone call
   inputGain: 100,
   outputGain: 100,
-  effectParams: {}
+  effectParams: {},
 };
 
 function read(key, fallback) {
@@ -39,60 +40,112 @@ function write(key, value) {
 }
 
 function remove(key) {
-  try { localStorage.removeItem(PREFIX + key); } catch { /* ignore */ }
+  try {
+    localStorage.removeItem(PREFIX + key);
+  } catch {
+    /* ignore */
+  }
 }
 
 const MAX_RECENT = 40;
 const MAX_SEARCHES = 8;
 
 export const storage = {
-  getTheme() { return read('theme', null); },
-  setTheme(theme) { write('theme', theme); },
+  getTheme() {
+    return read("theme", null);
+  },
+  setTheme(theme) {
+    write("theme", theme);
+  },
 
-  getSettings() { return { ...DEFAULT_SETTINGS, ...read('settings', {}) }; },
+  getSettings() {
+    return { ...DEFAULT_SETTINGS, ...read("settings", {}) };
+  },
   saveSettings(patch) {
     const next = { ...this.getSettings(), ...patch };
-    write('settings', next);
+    write("settings", next);
     return next;
   },
-  resetSettings() { remove('settings'); remove('microphonePreferences'); remove('theme'); },
+  resetSettings() {
+    remove("settings");
+    remove("microphonePreferences");
+    remove("theme");
+  },
 
-  getQueue() { return read('queue', { items: [], index: -1 }); },
-  saveQueue(state) { write('queue', state); },
-  clearQueue() { remove('queue'); },
+  getQueue() {
+    return read("queue", { items: [], index: -1 });
+  },
+  saveQueue(state) {
+    write("queue", state);
+  },
+  clearQueue() {
+    remove("queue");
+  },
 
-  getRecent() { return read('recentlyPlayed', []); },
+  getRecent() {
+    return read("recentlyPlayed", []);
+  },
   addRecent(song) {
     const list = this.getRecent().filter((s) => s.id !== song.id);
     list.unshift({ ...song, playedAt: Date.now() });
-    write('recentlyPlayed', list.slice(0, MAX_RECENT));
+    write("recentlyPlayed", list.slice(0, MAX_RECENT));
     return list;
   },
-  clearRecent() { remove('recentlyPlayed'); },
+  clearRecent() {
+    remove("recentlyPlayed");
+  },
 
-  getFavorites() { return read('favorites', []); },
+  getFavorites() {
+    return read("favorites", []);
+  },
   toggleFavorite(song) {
     const list = this.getFavorites();
     const exists = list.some((s) => s.id === song.id);
-    const next = exists ? list.filter((s) => s.id !== song.id) : [{ ...song, favoritedAt: Date.now() }, ...list];
-    write('favorites', next);
+    const next = exists
+      ? list.filter((s) => s.id !== song.id)
+      : [{ ...song, favoritedAt: Date.now() }, ...list];
+    write("favorites", next);
     return !exists;
   },
-  isFavorite(id) { return this.getFavorites().some((s) => s.id === id); },
-  clearFavorites() { remove('favorites'); },
-
-  getSearches() { return read('searchHistory', []); },
-  addSearch(query) {
-    const list = this.getSearches().filter((q) => q.toLowerCase() !== query.toLowerCase());
-    list.unshift(query);
-    write('searchHistory', list.slice(0, MAX_SEARCHES));
+  isFavorite(id) {
+    return this.getFavorites().some((s) => s.id === id);
   },
-  clearSearches() { remove('searchHistory'); },
+  clearFavorites() {
+    remove("favorites");
+  },
 
-  getMicPrefs() { return { ...DEFAULT_MIC_PREFS, ...read('microphonePreferences', {}) }; },
+  getSearches() {
+    return read("searchHistory", []);
+  },
+  addSearch(query) {
+    const list = this.getSearches().filter(
+      (q) => q.toLowerCase() !== query.toLowerCase(),
+    );
+    list.unshift(query);
+    write("searchHistory", list.slice(0, MAX_SEARCHES));
+  },
+  clearSearches() {
+    remove("searchHistory");
+  },
+
+  getLyricsDelay(id) {
+    return read("lyricsDelays", {})[id] || 0;
+  },
+  setLyricsDelay(id, seconds) {
+    const all = read("lyricsDelays", {});
+    if (seconds) all[id] = seconds;
+    else delete all[id];
+    const keys = Object.keys(all);
+    if (keys.length > 300) delete all[keys[0]];
+    write("lyricsDelays", all);
+  },
+
+  getMicPrefs() {
+    return { ...DEFAULT_MIC_PREFS, ...read("microphonePreferences", {}) };
+  },
   saveMicPrefs(patch) {
     const next = { ...this.getMicPrefs(), ...patch };
-    write('microphonePreferences', next);
+    write("microphonePreferences", next);
     return next;
-  }
+  },
 };

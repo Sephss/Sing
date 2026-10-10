@@ -1,332 +1,781 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" data-theme="dark">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Sing — Premium Karaoke</title>
-  <meta name="description" content="Search any song, play karaoke videos, follow lyrics, build a queue and sing with live microphone effects.">
-  <meta name="theme-color" content="#0a0a0f">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23ff2d78'/%3E%3Cpath d='M16 7a4 4 0 0 0-4 4v5a4 4 0 0 0 8 0v-5a4 4 0 0 0-4-4zm-7 9a7 7 0 0 0 14 0m-7 7v3' stroke='white' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-  <a class="skip-link" href="#main">Skip to content</a>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Sing — Premium Karaoke</title>
+    <meta
+      name="description"
+      content="Search any song, play karaoke videos, follow lyrics, build a queue and sing with live microphone effects."
+    />
+    <meta name="theme-color" content="#0a0a0f" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23ff2d78'/%3E%3Cpath d='M16 7a4 4 0 0 0-4 4v5a4 4 0 0 0 8 0v-5a4 4 0 0 0-4-4zm-7 9a7 7 0 0 0 14 0m-7 7v3' stroke='white' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
 
-  <div class="app" id="app">
-    <!-- Sidebar (desktop) / bottom nav (mobile) -->
-    <nav class="nav" aria-label="Main navigation">
-      <div class="brand">
-        <span class="brand-mark"><i data-icon="mic"></i></span>
-        <span class="brand-name">Sing<span class="brand-dot">.</span></span>
-      </div>
-      <ul class="nav-list">
-        <li><button class="nav-btn" data-view="home"><i data-icon="home"></i><span>Home</span></button></li>
-        <li><button class="nav-btn" data-view="search"><i data-icon="search"></i><span>Search</span></button></li>
-        <li><button class="nav-btn" data-view="categories"><i data-icon="grid"></i><span>Categories</span></button></li>
-        <li><button class="nav-btn" data-view="queue"><i data-icon="list"></i><span>Queue</span><b class="badge" id="queueBadge" hidden>0</b></button></li>
-        <li class="nav-desktop-only"><button class="nav-btn" data-view="recent"><i data-icon="clock"></i><span>Recent</span></button></li>
-        <li class="nav-desktop-only"><button class="nav-btn" data-view="favorites"><i data-icon="heart"></i><span>Favorites</span></button></li>
-        <li><button class="nav-btn" data-view="mic"><i data-icon="mic"></i><span>Microphone</span><i class="nav-live" id="navMicLive" hidden></i></button></li>
-        <li><button class="nav-btn" data-view="settings"><i data-icon="settings"></i><span>Settings</span></button></li>
-      </ul>
-      <button class="nav-more" id="navMore" aria-label="More sections" aria-expanded="false"><i data-icon="more"></i></button>
-      <div class="nav-more-menu" id="navMoreMenu" hidden>
-        <button class="nav-btn" data-view="recent"><i data-icon="clock"></i><span>Recent</span></button>
-        <button class="nav-btn" data-view="favorites"><i data-icon="heart"></i><span>Favorites</span></button>
-      </div>
-    </nav>
-
-    <main class="main" id="main" tabindex="-1">
-      <header class="topbar">
-        <form class="topbar-search" id="topSearchForm" role="search">
-          <i data-icon="search"></i>
-          <input type="search" id="topSearchInput" placeholder="Search songs, artists, or keywords…" aria-label="Search songs" autocomplete="off">
-        </form>
-        <div class="topbar-actions">
-          <button class="icon-btn" id="randomBtn" data-tip="Random song" aria-label="Play a random song"><i data-icon="shuffle"></i></button>
-          <button class="icon-btn" id="themeBtn" data-tip="Toggle theme" aria-label="Toggle light or dark theme"><i data-icon="moon" id="themeIcon"></i></button>
-          <button class="icon-btn" id="helpBtn" data-tip="Shortcuts" aria-label="Keyboard shortcuts"><i data-icon="keyboard"></i></button>
+    <div class="app" id="app">
+      <!-- Sidebar (desktop) / bottom nav (mobile) -->
+      <nav class="nav" aria-label="Main navigation">
+        <div class="brand">
+          <span class="brand-mark"><i data-icon="mic"></i></span>
+          <span class="brand-name">Sing<span class="brand-dot">.</span></span>
         </div>
-      </header>
-
-      <!-- HOME -->
-      <section class="view" id="view-home" data-title="Home">
-        <div class="hero">
-          <canvas class="hero-canvas" id="heroCanvas" aria-hidden="true"></canvas>
-          <div class="hero-glow" aria-hidden="true"></div>
-          <div class="hero-inner">
-            <p class="eyebrow"><i data-icon="sparkles"></i> Karaoke, reimagined</p>
-            <h1>What do you want <span class="grad-text">to sing?</span></h1>
-            <form class="hero-search" id="heroSearchForm" role="search">
-              <i data-icon="search"></i>
-              <input type="search" id="heroSearchInput" placeholder="Search songs, artists, or keywords…" aria-label="Search songs" autocomplete="off">
-              <button class="btn btn-primary" type="submit">Search</button>
-            </form>
-            <div class="hero-suggest" id="heroRecent"></div>
-            <ul class="hero-features" aria-label="Features">
-              <li><i data-icon="search"></i>Instant search</li>
-              <li><i data-icon="play"></i>HD karaoke video</li>
-              <li><i data-icon="text"></i>Synced lyrics</li>
-              <li><i data-icon="list"></i>Smart queue</li>
-              <li><i data-icon="mic"></i>Voice effects</li>
-            </ul>
-          </div>
+        <ul class="nav-list">
+          <li>
+            <button class="nav-btn" data-view="home">
+              <i data-icon="home"></i><span>Home</span>
+            </button>
+          </li>
+          <li>
+            <button class="nav-btn" data-view="search">
+              <i data-icon="search"></i><span>Search</span>
+            </button>
+          </li>
+          <li>
+            <button class="nav-btn" data-view="categories">
+              <i data-icon="grid"></i><span>Categories</span>
+            </button>
+          </li>
+          <li>
+            <button class="nav-btn" data-view="queue">
+              <i data-icon="list"></i><span>Queue</span
+              ><b class="badge" id="queueBadge" hidden>0</b>
+            </button>
+          </li>
+          <li class="nav-desktop-only">
+            <button class="nav-btn" data-view="recent">
+              <i data-icon="clock"></i><span>Recent</span>
+            </button>
+          </li>
+          <li class="nav-desktop-only">
+            <button class="nav-btn" data-view="favorites">
+              <i data-icon="heart"></i><span>Favorites</span>
+            </button>
+          </li>
+          <li>
+            <button class="nav-btn" data-view="mic">
+              <i data-icon="mic"></i><span>Microphone</span
+              ><i class="nav-live" id="navMicLive" hidden></i>
+            </button>
+          </li>
+          <li>
+            <button class="nav-btn" data-view="settings">
+              <i data-icon="settings"></i><span>Settings</span>
+            </button>
+          </li>
+        </ul>
+        <button
+          class="nav-more"
+          id="navMore"
+          aria-label="More sections"
+          aria-expanded="false"
+        >
+          <i data-icon="more"></i>
+        </button>
+        <div class="nav-more-menu" id="navMoreMenu" hidden>
+          <button class="nav-btn" data-view="recent">
+            <i data-icon="clock"></i><span>Recent</span>
+          </button>
+          <button class="nav-btn" data-view="favorites">
+            <i data-icon="heart"></i><span>Favorites</span>
+          </button>
         </div>
+      </nav>
 
-        <div class="section-head"><h2>Jump into a mood</h2></div>
-        <div class="chips" id="homeChips"></div>
-
-        <div class="section-head">
-          <h2>Popular right now</h2>
-          <button class="link-btn" data-goto="categories">Browse all <i data-icon="arrow-right"></i></button>
-        </div>
-        <div class="grid" id="homeGrid"></div>
-      </section>
-
-      <!-- SEARCH -->
-      <section class="view" id="view-search" data-title="Search" hidden>
-        <div class="section-head"><h2 id="searchHeading">Search</h2></div>
-        <div class="search-suggest" id="searchHistory"></div>
-        <div id="searchResults" class="results"></div>
-      </section>
-
-      <!-- CATEGORIES -->
-      <section class="view" id="view-categories" data-title="Categories" hidden>
-        <div class="section-head"><h2>Categories</h2></div>
-        <div class="chips chips-wrap" id="categoryChips" role="tablist" aria-label="Song categories"></div>
-        <div class="section-head"><h3 id="categoryHeading">Popular</h3></div>
-        <div id="categoryResults" class="grid"></div>
-      </section>
-
-      <!-- QUEUE -->
-      <section class="view" id="view-queue" data-title="Queue" hidden>
-        <div class="section-head">
-          <h2>Queue</h2>
-          <div class="row-actions">
-            <button class="btn btn-ghost" id="queueShuffle"><i data-icon="shuffle"></i>Shuffle</button>
-            <button class="btn btn-ghost" id="queueClear"><i data-icon="trash"></i>Clear</button>
+      <main class="main" id="main" tabindex="-1">
+        <header class="topbar">
+          <form class="topbar-search" id="topSearchForm" role="search">
+            <i data-icon="search"></i>
+            <input
+              type="search"
+              id="topSearchInput"
+              placeholder="Search songs, artists, or keywords…"
+              aria-label="Search songs"
+              autocomplete="off"
+            />
+          </form>
+          <div class="topbar-actions">
+            <button
+              class="icon-btn"
+              id="randomBtn"
+              data-tip="Random song"
+              aria-label="Play a random song"
+            >
+              <i data-icon="shuffle"></i>
+            </button>
+            <button
+              class="icon-btn"
+              id="themeBtn"
+              data-tip="Toggle theme"
+              aria-label="Toggle light or dark theme"
+            >
+              <i data-icon="moon" id="themeIcon"></i>
+            </button>
+            <button
+              class="icon-btn"
+              id="helpBtn"
+              data-tip="Shortcuts"
+              aria-label="Keyboard shortcuts"
+            >
+              <i data-icon="keyboard"></i>
+            </button>
           </div>
-        </div>
-        <div id="queuePage"></div>
-      </section>
+        </header>
 
-      <!-- RECENT -->
-      <section class="view" id="view-recent" data-title="Recently Played" hidden>
-        <div class="section-head">
-          <h2>Recently played</h2>
-          <button class="btn btn-ghost" id="recentClear"><i data-icon="trash"></i>Clear history</button>
-        </div>
-        <div id="recentList" class="list"></div>
-      </section>
-
-      <!-- FAVORITES -->
-      <section class="view" id="view-favorites" data-title="Favorites" hidden>
-        <div class="section-head">
-          <h2>Favorites</h2>
-          <button class="btn btn-ghost" id="favoritesQueueAll"><i data-icon="plus"></i>Queue all</button>
-        </div>
-        <div id="favoritesGrid" class="grid"></div>
-      </section>
-
-      <!-- MICROPHONE -->
-      <section class="view" id="view-mic" data-title="Microphone" hidden>
-        <div class="section-head"><h2>Microphone studio</h2></div>
-        <div class="mic-layout">
-          <div class="panel mic-stage">
-            <div class="mic-orb" id="micOrb">
-              <span class="mic-ring"></span><span class="mic-ring r2"></span>
-              <i data-icon="mic"></i>
-            </div>
-            <canvas id="micCanvas" class="mic-canvas" width="640" height="200" aria-label="Microphone audio visualizer" role="img"></canvas>
-            <p class="mic-status" id="micStatus" role="status">Allow microphone access to use Karaoke Microphone.</p>
-            <button class="btn btn-primary btn-lg" id="micToggle" aria-pressed="false"><i data-icon="mic"></i><span>Turn microphone on</span></button>
-            <div class="notice"><i data-icon="headphones"></i>
-              <p><b>Use headphones</b> to avoid feedback. Browsers add some audio latency depending on your device, so you may hear a slight delay.</p>
-            </div>
-          </div>
-
-          <div class="panel">
-            <h3>Effect</h3>
-            <div class="effects" id="effectGrid" role="radiogroup" aria-label="Voice effect"></div>
-
-            <h3>Effect tuning</h3>
-            <div class="sliders" id="effectParams"></div>
-
-            <h3>Mixer</h3>
-            <div class="sliders">
-              <label class="slider"><span>Input volume</span><input type="range" id="micInput" min="0" max="200" value="100"><output id="micInputOut">100%</output></label>
-              <label class="slider"><span>Output volume</span><input type="range" id="micOutput" min="0" max="200" value="100"><output id="micOutputOut">100%</output></label>
-              <label class="slider"><span>Master (karaoke video)</span><input type="range" id="musicVolume" min="0" max="100" value="80"><output id="musicVolumeOut">80%</output></label>
-            </div>
-            <p class="hint">Music volume controls the embedded video player. The video's audio plays inside YouTube's player, so browsers don't let this page process it. Your mic is processed separately and mixed at your speakers.</p>
-
-            <div class="field">
-              <label for="micDevice">Input device</label>
-              <select id="micDevice" class="select"></select>
-            </div>
-            <button class="btn btn-ghost" id="micTest"><i data-icon="activity"></i>Test microphone (3s loopback)</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- SETTINGS -->
-      <section class="view" id="view-settings" data-title="Settings" hidden>
-        <div class="section-head"><h2>Settings</h2></div>
-        <div class="settings">
-          <div class="panel">
-            <h3>Appearance</h3>
-            <div class="segmented" id="themeSegment" role="radiogroup" aria-label="Theme">
-              <button role="radio" data-theme-opt="dark"><i data-icon="moon"></i>Dark</button>
-              <button role="radio" data-theme-opt="light"><i data-icon="sun"></i>Light</button>
-            </div>
-            <label class="switch-row"><span>Ambient glow in player</span><input type="checkbox" class="switch" id="setVisualizer"></label>
-          </div>
-          <div class="panel">
-            <h3>Playback</h3>
-            <label class="switch-row"><span>Autoplay next song</span><input type="checkbox" class="switch" id="setAutoplay"></label>
-            <label class="switch-row"><span>Remember queue</span><input type="checkbox" class="switch" id="setRememberQueue"></label>
-            <label class="slider"><span>Default volume</span><input type="range" id="setVolume" min="0" max="100"><output id="setVolumeOut"></output></label>
-          </div>
-          <div class="panel">
-            <h3>Microphone defaults</h3>
-            <label class="switch-row"><span>Monitor my voice</span><input type="checkbox" class="switch" id="setMonitor"></label>
-            <div class="field"><label for="setEffect">Default effect</label><select id="setEffect" class="select"></select></div>
-            <label class="slider"><span>Effect intensity</span><input type="range" id="setIntensity" min="0" max="100"><output id="setIntensityOut"></output></label>
-          </div>
-          <div class="panel">
-            <h3>Data</h3>
-            <div class="stack">
-              <button class="btn btn-ghost" id="clearRecent">Clear recently played</button>
-              <button class="btn btn-ghost" id="clearFavorites">Clear favorites</button>
-              <button class="btn btn-ghost" id="clearQueueSetting">Clear queue</button>
-              <button class="btn btn-danger" id="resetSettings">Reset all settings</button>
+        <!-- HOME -->
+        <section class="view" id="view-home" data-title="Home">
+          <div class="hero">
+            <canvas
+              class="hero-canvas"
+              id="heroCanvas"
+              aria-hidden="true"
+            ></canvas>
+            <div class="hero-glow" aria-hidden="true"></div>
+            <div class="hero-inner">
+              <p class="eyebrow">
+                <i data-icon="sparkles"></i> Karaoke, reimagined
+              </p>
+              <h1>What do you want <span class="grad-text">to sing?</span></h1>
+              <form class="hero-search" id="heroSearchForm" role="search">
+                <i data-icon="search"></i>
+                <input
+                  type="search"
+                  id="heroSearchInput"
+                  placeholder="Search songs, artists, or keywords…"
+                  aria-label="Search songs"
+                  autocomplete="off"
+                />
+                <button class="btn btn-primary" type="submit">Search</button>
+              </form>
+              <div class="hero-suggest" id="heroRecent"></div>
+              <ul class="hero-features" aria-label="Features">
+                <li><i data-icon="search"></i>Instant search</li>
+                <li><i data-icon="play"></i>HD karaoke video</li>
+                <li><i data-icon="text"></i>Synced lyrics</li>
+                <li><i data-icon="list"></i>Smart queue</li>
+                <li><i data-icon="mic"></i>Voice effects</li>
+              </ul>
             </div>
           </div>
-          <div class="panel">
-            <h3>Keyboard shortcuts</h3>
-            <dl class="shortcuts" id="shortcutList"></dl>
+
+          <div class="section-head"><h2>Jump into a mood</h2></div>
+          <div class="chips" id="homeChips"></div>
+
+          <div class="section-head">
+            <h2>Popular right now</h2>
+            <button class="link-btn" data-goto="categories">
+              Browse all <i data-icon="arrow-right"></i>
+            </button>
           </div>
-        </div>
-      </section>
-    </main>
+          <div class="grid" id="homeGrid"></div>
+        </section>
 
-    <!-- KARAOKE PLAYER VIEW -->
-    <section class="player-view" id="playerView" aria-label="Karaoke player" hidden>
-      <div class="player-top">
-        <button class="icon-btn" id="playerClose" aria-label="Close player" data-tip="Close"><i data-icon="chevron-down"></i></button>
-        <div class="player-titles">
-          <h2 id="playerTitle">Nothing playing</h2>
-          <p id="playerArtist">Search for a song to begin</p>
-        </div>
-        <div class="player-top-actions">
-          <button class="icon-btn" id="playerFav" aria-label="Favorite" data-tip="Favorite"><i data-icon="heart"></i></button>
-          <button class="icon-btn" id="playerQueueBtn" aria-label="Open queue" data-tip="Queue (Q)"><i data-icon="list"></i></button>
-          <button class="icon-btn" id="playerLyricsBtn" aria-label="Toggle lyrics" data-tip="Lyrics (L)"><i data-icon="text"></i></button>
-          <button class="icon-btn" id="playerFullscreen" aria-label="Fullscreen" data-tip="Fullscreen (F)"><i data-icon="maximize"></i></button>
-        </div>
-      </div>
+        <!-- SEARCH -->
+        <section class="view" id="view-search" data-title="Search" hidden>
+          <div class="section-head"><h2 id="searchHeading">Search</h2></div>
+          <div class="search-suggest" id="searchHistory"></div>
+          <div id="searchResults" class="results"></div>
+        </section>
 
-      <div class="player-body" id="playerBody">
-        <div class="stage-slot" id="stageSlot">
-          <div class="stage-overlay" id="stageOverlay"><div class="eq"><i></i><i></i><i></i><i></i></div></div>
-        </div>
-        <aside class="lyrics-panel" id="lyricsPanel" aria-label="Lyrics">
-          <div class="lyrics-head">
-            <h3>Lyrics</h3>
+        <!-- CATEGORIES -->
+        <section
+          class="view"
+          id="view-categories"
+          data-title="Categories"
+          hidden
+        >
+          <div class="section-head"><h2>Categories</h2></div>
+          <div
+            class="chips chips-wrap"
+            id="categoryChips"
+            role="tablist"
+            aria-label="Song categories"
+          ></div>
+          <div class="section-head"><h3 id="categoryHeading">Popular</h3></div>
+          <div id="categoryResults" class="grid"></div>
+        </section>
+
+        <!-- QUEUE -->
+        <section class="view" id="view-queue" data-title="Queue" hidden>
+          <div class="section-head">
+            <h2>Queue</h2>
             <div class="row-actions">
-              <button class="icon-btn sm" id="lyricsSmaller" aria-label="Smaller text"><i data-icon="minus"></i></button>
-              <button class="icon-btn sm" id="lyricsLarger" aria-label="Larger text"><i data-icon="plus"></i></button>
-              <button class="icon-btn sm lyrics-close" id="lyricsClose" aria-label="Close lyrics"><i data-icon="x"></i></button>
+              <button class="btn btn-ghost" id="queueShuffle">
+                <i data-icon="shuffle"></i>Shuffle
+              </button>
+              <button class="btn btn-ghost" id="queueClear">
+                <i data-icon="trash"></i>Clear
+              </button>
             </div>
           </div>
-          <div class="lyrics-scroll" id="lyricsScroll" aria-live="polite"></div>
-        </aside>
-      </div>
+          <div id="queuePage"></div>
+        </section>
 
-      <div class="fs-lyrics" id="fsLyrics" aria-hidden="true"></div>
-
-      <div class="player-controls" id="playerControls">
-        <div class="seek-row">
-          <span class="time" id="timeCurrent">0:00</span>
-          <input type="range" class="seek" id="seekBar" min="0" max="1000" value="0" aria-label="Seek">
-          <span class="time" id="timeTotal">0:00</span>
-        </div>
-        <div class="control-row">
-          <div class="control-side">
-            <button class="icon-btn" id="ctlShuffle" aria-label="Shuffle queue" data-tip="Shuffle"><i data-icon="shuffle"></i></button>
-            <button class="icon-btn" id="ctlRepeat" aria-label="Repeat mode" data-tip="Repeat: off"><i data-icon="repeat"></i></button>
+        <!-- RECENT -->
+        <section
+          class="view"
+          id="view-recent"
+          data-title="Recently Played"
+          hidden
+        >
+          <div class="section-head">
+            <h2>Recently played</h2>
+            <button class="btn btn-ghost" id="recentClear">
+              <i data-icon="trash"></i>Clear history
+            </button>
           </div>
-          <div class="control-main">
-            <button class="icon-btn lg" id="ctlPrev" aria-label="Previous" data-tip="Previous"><i data-icon="skip-back"></i></button>
-            <button class="play-btn" id="ctlPlay" aria-label="Play"><i data-icon="play" id="ctlPlayIcon"></i></button>
-            <button class="icon-btn lg" id="ctlNext" aria-label="Next" data-tip="Next"><i data-icon="skip-forward"></i></button>
+          <div id="recentList" class="list"></div>
+        </section>
+
+        <!-- FAVORITES -->
+        <section class="view" id="view-favorites" data-title="Favorites" hidden>
+          <div class="section-head">
+            <h2>Favorites</h2>
+            <button class="btn btn-ghost" id="favoritesQueueAll">
+              <i data-icon="plus"></i>Queue all
+            </button>
           </div>
-          <div class="control-side right">
-            <button class="icon-btn" id="ctlMute" aria-label="Mute" data-tip="Mute (M)"><i data-icon="volume" id="ctlMuteIcon"></i></button>
-            <input type="range" class="vol" id="ctlVolume" min="0" max="100" value="80" aria-label="Volume">
-            <button class="icon-btn" id="ctlSleep" aria-label="Sleep timer" data-tip="Sleep timer"><i data-icon="moon"></i></button>
+          <div id="favoritesGrid" class="grid"></div>
+        </section>
+
+        <!-- MICROPHONE -->
+        <section class="view" id="view-mic" data-title="Microphone" hidden>
+          <div class="section-head"><h2>Microphone studio</h2></div>
+          <div class="mic-layout">
+            <div class="panel mic-stage">
+              <div class="mic-orb" id="micOrb">
+                <span class="mic-ring"></span><span class="mic-ring r2"></span>
+                <i data-icon="mic"></i>
+              </div>
+              <canvas
+                id="micCanvas"
+                class="mic-canvas"
+                width="640"
+                height="200"
+                aria-label="Microphone audio visualizer"
+                role="img"
+              ></canvas>
+              <p class="mic-status" id="micStatus" role="status">
+                Allow microphone access to use Karaoke Microphone.
+              </p>
+              <button
+                class="btn btn-primary btn-lg"
+                id="micToggle"
+                aria-pressed="false"
+              >
+                <i data-icon="mic"></i><span>Turn microphone on</span>
+              </button>
+              <div class="notice">
+                <i data-icon="headphones"></i>
+                <p>
+                  <b>Use headphones</b> to avoid feedback. Browsers add some
+                  audio latency depending on your device, so you may hear a
+                  slight delay. Using Bluetooth headphones? Pick your computer’s
+                  built-in mic as the input — Bluetooth switches to phone-call
+                  quality whenever it’s used as a mic.
+                </p>
+              </div>
+            </div>
+
+            <div class="panel">
+              <h3>Effect</h3>
+              <div
+                class="effects"
+                id="effectGrid"
+                role="radiogroup"
+                aria-label="Voice effect"
+              ></div>
+
+              <h3>Effect tuning</h3>
+              <div class="sliders" id="effectParams"></div>
+
+              <h3>Mixer</h3>
+              <div class="sliders">
+                <label class="slider"
+                  ><span>Input volume</span
+                  ><input
+                    type="range"
+                    id="micInput"
+                    min="0"
+                    max="200"
+                    value="100"
+                  /><output id="micInputOut">100%</output></label
+                >
+                <label class="slider"
+                  ><span>Output volume</span
+                  ><input
+                    type="range"
+                    id="micOutput"
+                    min="0"
+                    max="200"
+                    value="100"
+                  /><output id="micOutputOut">100%</output></label
+                >
+                <label class="slider"
+                  ><span>Master (karaoke video)</span
+                  ><input
+                    type="range"
+                    id="musicVolume"
+                    min="0"
+                    max="100"
+                    value="80"
+                  /><output id="musicVolumeOut">80%</output></label
+                >
+              </div>
+              <p class="hint">
+                Music volume controls the embedded video player. The video's
+                audio plays inside YouTube's player, so browsers don't let this
+                page process it. Your mic is processed separately and mixed at
+                your speakers.
+              </p>
+
+              <div class="field">
+                <label for="micDevice">Input device</label>
+                <select id="micDevice" class="select"></select>
+              </div>
+              <label class="switch-row"
+                ><span
+                  >Echo cancellation<small class="hint-inline"
+                    >Off keeps music clear. Turn on only if you sing through
+                    speakers.</small
+                  ></span
+                ><input type="checkbox" class="switch" id="micEcho"
+              /></label>
+              <button class="btn btn-ghost" id="micTest">
+                <i data-icon="activity"></i>Test microphone (3s loopback)
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- SETTINGS -->
+        <section class="view" id="view-settings" data-title="Settings" hidden>
+          <div class="section-head"><h2>Settings</h2></div>
+          <div class="settings">
+            <div class="panel">
+              <h3>Appearance</h3>
+              <div
+                class="segmented"
+                id="themeSegment"
+                role="radiogroup"
+                aria-label="Theme"
+              >
+                <button role="radio" data-theme-opt="dark">
+                  <i data-icon="moon"></i>Dark
+                </button>
+                <button role="radio" data-theme-opt="light">
+                  <i data-icon="sun"></i>Light
+                </button>
+              </div>
+              <label class="switch-row"
+                ><span>Ambient glow in player</span
+                ><input type="checkbox" class="switch" id="setVisualizer"
+              /></label>
+            </div>
+            <div class="panel">
+              <h3>Playback</h3>
+              <label class="switch-row"
+                ><span>Autoplay next song</span
+                ><input type="checkbox" class="switch" id="setAutoplay"
+              /></label>
+              <label class="switch-row"
+                ><span>Remember queue</span
+                ><input type="checkbox" class="switch" id="setRememberQueue"
+              /></label>
+              <label class="slider"
+                ><span>Default volume</span
+                ><input type="range" id="setVolume" min="0" max="100" /><output
+                  id="setVolumeOut"
+                ></output
+              ></label>
+            </div>
+            <div class="panel">
+              <h3>Microphone defaults</h3>
+              <label class="switch-row"
+                ><span>Monitor my voice</span
+                ><input type="checkbox" class="switch" id="setMonitor"
+              /></label>
+              <div class="field">
+                <label for="setEffect">Default effect</label
+                ><select id="setEffect" class="select"></select>
+              </div>
+              <label class="slider"
+                ><span>Effect intensity</span
+                ><input
+                  type="range"
+                  id="setIntensity"
+                  min="0"
+                  max="100" /><output id="setIntensityOut"></output
+              ></label>
+            </div>
+            <div class="panel">
+              <h3>Data</h3>
+              <div class="stack">
+                <button class="btn btn-ghost" id="clearRecent">
+                  Clear recently played
+                </button>
+                <button class="btn btn-ghost" id="clearFavorites">
+                  Clear favorites
+                </button>
+                <button class="btn btn-ghost" id="clearQueueSetting">
+                  Clear queue
+                </button>
+                <button class="btn btn-danger" id="resetSettings">
+                  Reset all settings
+                </button>
+              </div>
+            </div>
+            <div class="panel">
+              <h3>Keyboard shortcuts</h3>
+              <dl class="shortcuts" id="shortcutList"></dl>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- KARAOKE PLAYER VIEW -->
+      <section
+        class="player-view"
+        id="playerView"
+        aria-label="Karaoke player"
+        hidden
+      >
+        <div class="player-top">
+          <button
+            class="icon-btn"
+            id="playerClose"
+            aria-label="Close player"
+            data-tip="Close"
+          >
+            <i data-icon="chevron-down"></i>
+          </button>
+          <div class="player-titles">
+            <h2 id="playerTitle">Nothing playing</h2>
+            <p id="playerArtist">Search for a song to begin</p>
+          </div>
+          <div class="player-top-actions">
+            <button
+              class="icon-btn"
+              id="playerFav"
+              aria-label="Favorite"
+              data-tip="Favorite"
+            >
+              <i data-icon="heart"></i>
+            </button>
+            <button
+              class="icon-btn"
+              id="playerQueueBtn"
+              aria-label="Open queue"
+              data-tip="Queue (Q)"
+            >
+              <i data-icon="list"></i>
+            </button>
+            <button
+              class="icon-btn"
+              id="playerLyricsBtn"
+              aria-label="Toggle lyrics"
+              data-tip="Lyrics (L)"
+            >
+              <i data-icon="text"></i>
+            </button>
+            <button
+              class="icon-btn"
+              id="playerFullscreen"
+              aria-label="Fullscreen"
+              data-tip="Fullscreen (F)"
+            >
+              <i data-icon="maximize"></i>
+            </button>
           </div>
         </div>
+
+        <div class="player-body" id="playerBody">
+          <div class="stage-slot" id="stageSlot">
+            <div class="stage-overlay" id="stageOverlay">
+              <div class="eq"><i></i><i></i><i></i><i></i></div>
+            </div>
+          </div>
+          <aside class="lyrics-panel" id="lyricsPanel" aria-label="Lyrics">
+            <div class="lyrics-head">
+              <h3>Lyrics</h3>
+              <div class="row-actions">
+                <button
+                  class="icon-btn sm"
+                  id="lyricsSmaller"
+                  aria-label="Smaller text"
+                >
+                  <i data-icon="minus"></i>
+                </button>
+                <button
+                  class="icon-btn sm"
+                  id="lyricsLarger"
+                  aria-label="Larger text"
+                >
+                  <i data-icon="plus"></i>
+                </button>
+                <button
+                  class="icon-btn sm lyrics-close"
+                  id="lyricsClose"
+                  aria-label="Close lyrics"
+                >
+                  <i data-icon="x"></i>
+                </button>
+              </div>
+            </div>
+            <div class="lyrics-sync" role="group" aria-label="Lyrics timing">
+              <span class="lyrics-sync-label">Delay</span>
+              <button
+                class="chip sm"
+                data-delay="-1"
+                aria-label="Lyrics 1 second earlier"
+              >
+                −1
+              </button>
+              <button
+                class="chip sm"
+                data-delay="-0.1"
+                aria-label="Lyrics 0.1 second earlier"
+              >
+                −.1
+              </button>
+              <output id="lyricsDelayOut" aria-live="polite">0.0s</output>
+              <button
+                class="chip sm"
+                data-delay="0.1"
+                aria-label="Lyrics 0.1 second later"
+              >
+                +.1
+              </button>
+              <button
+                class="chip sm"
+                data-delay="1"
+                aria-label="Lyrics 1 second later"
+              >
+                +1
+              </button>
+              <button
+                class="btn btn-ghost btn-sm"
+                id="lyricsTapSync"
+                title="Press the moment the highlighted line is actually sung"
+              >
+                Sync
+              </button>
+              <button class="link-btn" id="lyricsDelayReset">Reset</button>
+            </div>
+            <div
+              class="lyrics-scroll"
+              id="lyricsScroll"
+              aria-live="polite"
+            ></div>
+          </aside>
+        </div>
+
+        <div class="fs-lyrics" id="fsLyrics" aria-hidden="true"></div>
+
+        <div class="player-controls" id="playerControls">
+          <div class="seek-row">
+            <span class="time" id="timeCurrent">0:00</span>
+            <input
+              type="range"
+              class="seek"
+              id="seekBar"
+              min="0"
+              max="1000"
+              value="0"
+              aria-label="Seek"
+            />
+            <span class="time" id="timeTotal">0:00</span>
+          </div>
+          <div class="control-row">
+            <div class="control-side">
+              <button
+                class="icon-btn"
+                id="ctlShuffle"
+                aria-label="Shuffle queue"
+                data-tip="Shuffle"
+              >
+                <i data-icon="shuffle"></i>
+              </button>
+              <button
+                class="icon-btn"
+                id="ctlRepeat"
+                aria-label="Repeat mode"
+                data-tip="Repeat: off"
+              >
+                <i data-icon="repeat"></i>
+              </button>
+            </div>
+            <div class="control-main">
+              <button
+                class="icon-btn lg"
+                id="ctlPrev"
+                aria-label="Previous"
+                data-tip="Previous"
+              >
+                <i data-icon="skip-back"></i>
+              </button>
+              <button class="play-btn" id="ctlPlay" aria-label="Play">
+                <i data-icon="play" id="ctlPlayIcon"></i>
+              </button>
+              <button
+                class="icon-btn lg"
+                id="ctlNext"
+                aria-label="Next"
+                data-tip="Next"
+              >
+                <i data-icon="skip-forward"></i>
+              </button>
+            </div>
+            <div class="control-side right">
+              <button
+                class="icon-btn"
+                id="ctlMute"
+                aria-label="Mute"
+                data-tip="Mute (M)"
+              >
+                <i data-icon="volume" id="ctlMuteIcon"></i>
+              </button>
+              <input
+                type="range"
+                class="vol"
+                id="ctlVolume"
+                min="0"
+                max="100"
+                value="80"
+                aria-label="Volume"
+              />
+              <button
+                class="icon-btn"
+                id="ctlSleep"
+                aria-label="Sleep timer"
+                data-tip="Sleep timer"
+              >
+                <i data-icon="moon"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Persistent YouTube stage (moved by JS to the player slot or mini player) -->
+      <div class="stage" id="stage" aria-hidden="false">
+        <div id="ytPlayer"></div>
       </div>
-    </section>
 
-    <!-- Persistent YouTube stage (moved by JS to the player slot or mini player) -->
-    <div class="stage" id="stage" aria-hidden="false">
-      <div id="ytPlayer"></div>
-    </div>
-
-    <!-- Mini player -->
-    <div class="mini" id="miniPlayer" hidden>
-      <button class="mini-info" id="miniOpen" aria-label="Open player">
-        <span class="mini-thumb" id="miniThumb"></span>
-        <span class="mini-text"><b id="miniTitle">—</b><small id="miniArtist">—</small></span>
-      </button>
-      <div class="mini-progress" aria-hidden="true"><i id="miniProgress"></i></div>
-      <div class="mini-controls">
-        <button class="icon-btn" id="miniPrev" aria-label="Previous"><i data-icon="skip-back"></i></button>
-        <button class="icon-btn filled" id="miniPlay" aria-label="Play"><i data-icon="play" id="miniPlayIcon"></i></button>
-        <button class="icon-btn" id="miniNext" aria-label="Next"><i data-icon="skip-forward"></i></button>
-        <button class="icon-btn mini-hide-sm" id="miniMic" aria-label="Microphone"><i data-icon="mic"></i></button>
-      </div>
-    </div>
-
-    <!-- Queue drawer -->
-    <div class="scrim" id="queueScrim" hidden></div>
-    <aside class="drawer" id="queueDrawer" aria-label="Queue" aria-hidden="true">
-      <div class="drawer-grip" aria-hidden="true"></div>
-      <div class="drawer-head">
-        <h3>Queue</h3>
-        <div class="row-actions">
-          <button class="icon-btn sm" id="drawerShuffle" aria-label="Shuffle"><i data-icon="shuffle"></i></button>
-          <button class="icon-btn sm" id="drawerClear" aria-label="Clear queue"><i data-icon="trash"></i></button>
-          <button class="icon-btn sm" id="drawerClose" aria-label="Close queue"><i data-icon="x"></i></button>
+      <!-- Mini player -->
+      <div class="mini" id="miniPlayer" hidden>
+        <button class="mini-info" id="miniOpen" aria-label="Open player">
+          <span class="mini-thumb" id="miniThumb"></span>
+          <span class="mini-text"
+            ><b id="miniTitle">—</b><small id="miniArtist">—</small></span
+          >
+        </button>
+        <div class="mini-progress" aria-hidden="true">
+          <i id="miniProgress"></i>
+        </div>
+        <div class="mini-controls">
+          <button class="icon-btn" id="miniPrev" aria-label="Previous">
+            <i data-icon="skip-back"></i>
+          </button>
+          <button class="icon-btn filled" id="miniPlay" aria-label="Play">
+            <i data-icon="play" id="miniPlayIcon"></i>
+          </button>
+          <button class="icon-btn" id="miniNext" aria-label="Next">
+            <i data-icon="skip-forward"></i>
+          </button>
+          <button
+            class="icon-btn mini-hide-sm"
+            id="miniMic"
+            aria-label="Microphone"
+          >
+            <i data-icon="mic"></i>
+          </button>
         </div>
       </div>
-      <div class="drawer-body" id="drawerBody"></div>
-    </aside>
 
-    <!-- Shortcuts modal -->
-    <div class="modal-wrap" id="shortcutsModal" hidden>
-      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="shortcutsTitle">
-        <div class="modal-head"><h3 id="shortcutsTitle">Keyboard shortcuts</h3><button class="icon-btn sm" id="shortcutsClose" aria-label="Close"><i data-icon="x"></i></button></div>
-        <dl class="shortcuts" id="shortcutListModal"></dl>
+      <!-- Queue drawer -->
+      <div class="scrim" id="queueScrim" hidden></div>
+      <aside
+        class="drawer"
+        id="queueDrawer"
+        aria-label="Queue"
+        aria-hidden="true"
+      >
+        <div class="drawer-grip" aria-hidden="true"></div>
+        <div class="drawer-head">
+          <h3>Queue</h3>
+          <div class="row-actions">
+            <button class="icon-btn sm" id="drawerShuffle" aria-label="Shuffle">
+              <i data-icon="shuffle"></i>
+            </button>
+            <button
+              class="icon-btn sm"
+              id="drawerClear"
+              aria-label="Clear queue"
+            >
+              <i data-icon="trash"></i>
+            </button>
+            <button
+              class="icon-btn sm"
+              id="drawerClose"
+              aria-label="Close queue"
+            >
+              <i data-icon="x"></i>
+            </button>
+          </div>
+        </div>
+        <div class="drawer-body" id="drawerBody"></div>
+      </aside>
+
+      <!-- Shortcuts modal -->
+      <div class="modal-wrap" id="shortcutsModal" hidden>
+        <div
+          class="modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="shortcutsTitle"
+        >
+          <div class="modal-head">
+            <h3 id="shortcutsTitle">Keyboard shortcuts</h3>
+            <button class="icon-btn sm" id="shortcutsClose" aria-label="Close">
+              <i data-icon="x"></i>
+            </button>
+          </div>
+          <dl class="shortcuts" id="shortcutListModal"></dl>
+        </div>
       </div>
+
+      <!-- Sleep timer dropdown -->
+      <div
+        class="menu"
+        id="sleepMenu"
+        hidden
+        role="menu"
+        aria-label="Sleep timer"
+      >
+        <button role="menuitem" data-sleep="0">Off</button>
+        <button role="menuitem" data-sleep="15">15 minutes</button>
+        <button role="menuitem" data-sleep="30">30 minutes</button>
+        <button role="menuitem" data-sleep="60">1 hour</button>
+      </div>
+
+      <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
     </div>
 
-    <!-- Sleep timer dropdown -->
-    <div class="menu" id="sleepMenu" hidden role="menu" aria-label="Sleep timer">
-      <button role="menuitem" data-sleep="0">Off</button>
-      <button role="menuitem" data-sleep="15">15 minutes</button>
-      <button role="menuitem" data-sleep="30">30 minutes</button>
-      <button role="menuitem" data-sleep="60">1 hour</button>
-    </div>
-
-    <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
-  </div>
-
-  <script type="module" src="js/app.js"></script>
-</body>
+    <script type="module" src="js/app.js"></script>
+  </body>
 </html>
